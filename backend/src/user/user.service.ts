@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
+import { RegisterRequestDto } from 'src/auth/dto/register.dto'
 import { PrismaService } from 'src/database/prisma.service'
-import { CreateUserDto } from './dto/create-user.dto'
 
 @Injectable()
 export class UserService {
@@ -8,9 +8,28 @@ export class UserService {
 	async getAll() {
 		return await this.prisma.user.findMany()
 	}
-	async create(dto: CreateUserDto) {
+
+	async create(dto: RegisterRequestDto) {
 		return await this.prisma.user.create({
 			data: dto
+		})
+	}
+
+	async getByEmail(email: string) {
+		return await this.prisma.user.findUnique({
+			where: {
+				email
+			},
+			select: {
+				id: true,
+				password: true
+			}
+		})
+	}
+
+	async getById(id: string) {
+		return await this.prisma.user.findUnique({
+			where: { id }
 		})
 	}
 }
