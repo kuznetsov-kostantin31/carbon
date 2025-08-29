@@ -6,12 +6,12 @@ import {
 	HttpStatus,
 	Post,
 	Req,
-	Res,
-	UseGuards
+	Res
 } from '@nestjs/common'
-import { AuthGuard } from '@nestjs/passport'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import type { Request, Response } from 'express'
+import { Auth } from 'src/common/decorators/auth.decorator'
+import { CurrentUser } from 'src/common/decorators/current-user.decorator'
 import { AuthService } from './auth.service'
 import { LoginRequestDto } from './dto/login.dto'
 import { RegisterRequestDto } from './dto/register.dto'
@@ -59,10 +59,10 @@ export class AuthController {
 	}
 
 	@Get('@me')
-	@UseGuards(AuthGuard('jwt'))
+	@Auth()
 	@HttpCode(HttpStatus.OK)
-	@ApiResponse({ status: HttpStatus.OK, description: 'Выход из аккаунта' })
-	async me(@Req() req: Request) {
-		return req.user
+	@ApiResponse({ status: HttpStatus.OK, description: 'Профиль' })
+	async me(@CurrentUser('id') id: string) {
+		return { id }
 	}
 }
