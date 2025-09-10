@@ -1,0 +1,29 @@
+- name: Install Docker Engine
+  apt:
+    name: ['docker.io']
+    state: present
+    update_cache: yes
+
+- name: Install docker compose plugin
+  apt:
+    name: docker-compose-plugin
+    state: present
+
+- name: Add deploy to docker group
+  user:
+    name: '{{ deploy_user }}'
+    groups: docker
+    append: yes
+
+- name: Create directories
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: '{{ deploy_user }}'
+    group: '{{ deploy_user }}'
+    mode: '0755'
+  loop:
+    - /opt/app
+    - /opt/app/compose
+    - /opt/app/env
+    - /opt/app/nginx

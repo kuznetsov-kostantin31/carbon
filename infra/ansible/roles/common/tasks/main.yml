@@ -1,0 +1,24 @@
+- name: Ensure locale and time sync
+  apt:
+    name: ['ntp', 'ca-certificates', 'curl']
+    state: present
+    update_cache: yes
+
+- name: Create deploy user
+  user:
+    name: '{{ deploy_user }}'
+    groups: sudo
+    shell: /bin/bash
+    create_home: yes
+
+- name: Allow passwordless sudo for deploy
+  copy:
+    dest: /etc/sudoers.d/deploy
+    content: "deploy ALL=(ALL) NOPASSWD:ALL\n"
+    mode: 0440
+
+- name: Setup SSH keys for deploy
+  authorized_key:
+    user: '{{ deploy_user }}'
+    state: present
+    key: "{{ lookup('env','DEPLOY_SSH_PUBKEY') }}"

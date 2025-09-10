@@ -1,0 +1,75 @@
+- hosts: app
+  become: true
+  vars:
+    app_dir: /opt/app
+  tasks:
+    - name: Copy compose files
+      copy:
+        src: '{{ item.src }}'
+        dest: '{{ app_dir }}/compose/{{ item.dest }}'
+        owner: deploy
+        group: deploy
+        mode: '0644'
+      loop:
+        - {
+            src: '../../compose/docker-compose.yml',
+            dest: 'docker-compose.yml',
+          }
+        - {
+            src: '../../compose/docker-compose.prod.yml',
+            dest: 'docker-compose.prod.yml',
+          }
+
+    - name: Copy nginx.conf
+      copy:
+        src: '../../nginx/nginx.conf'
+        dest: '{{ app_dir }}/nginx/nginx.conf'
+        owner: deploy
+        group: deploy
+        mode: '0644'
+      notify: Reload nginx
+
+    - name: Render env file from CI variables
+      copy:
+        dest: '{{ app_dir }}/env/.env.prod'
+        content: "{{ lookup('env','ENV_PROD') }}"
+        owner: deploy
+        group: deploy
+        mode: '0600'
+
+    - name: Pull images
+      become_user: deploy
+      shell: |
+        docker compose -f {{ app_dir }}/compose/docker-compose.yml \
+                       -f {{ app_dir }}/compose/docker-compose.prod.yml \
+                       --env-file {{ app_dir }}/env/.env.prod pull
+
+    - name: Run DB migrations (Prisma)
+      become_user: deploy
+      shell: |
+        docker compose -f {{ app_dir }}/compose/docker-compose.yml \
+                       -f {{ app_dir }}/compose/docker-compose.prod.yml \
+                       --env-file {{ app_dir }}/env/.env.prod \
+                       run --rm backend npx prisma migrate deploy
+
+    - name: Up stack
+      become_user: deploy
+      shell: |
+        docker compose -f {{ app_dir }}/compose/docker-compose.yml \
+                       -f {{ app_dir }}/compose/docker-compose.prod.yml \
+                       --env-file {{ app_dir }}/env/.env.prod up -d
+
+    - name: Healthcheck backend
+      uri:
+        url: http://localhost/api/health
+        status_code: 200
+      register: health
+      retries: 10
+      delay: 3
+      until: health.status == 200
+
+  handlers:
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded

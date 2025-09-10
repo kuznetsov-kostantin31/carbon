@@ -1,0 +1,20 @@
+# infra/ansible/inventories/prod/group_vars/all.yml
+
+# имя пользователя для деплоя (общая переменная для ролей common, docker и app)
+deploy_user: deploy
+
+# пути на сервере
+app_dir: /opt/app
+compose_dir: '{{ app_dir }}/compose'
+env_dir: '{{ app_dir }}/env'
+nginx_dir: '{{ app_dir }}/nginx'
+
+# версия приложения (может подтягиваться из CI/CD)
+app_version: 'latest'
+
+# переменные для БД
+db_user: app_user
+db_name: app_db
+
+# домен
+site_domain: 'site.ru'

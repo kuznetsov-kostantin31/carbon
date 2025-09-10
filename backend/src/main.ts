@@ -1,22 +1,23 @@
+import { Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import * as cookieParser from 'cookie-parser'
+
 import { AppModule } from './app.module'
+import { getCorsConfig } from './config/cors.config'
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule)
 	const config = app.get(ConfigService)
-	const PORT = config.getOrThrow('PORT')
-	const ORIGIN: string[] = config.getOrThrow('ORIGIN')
+	const logger = new Logger(AppModule.name)
 
-	app.setGlobalPrefix('/api') // настройка куки
+	const port = config.getOrThrow<number>('HTTP_PORT')
+	const host = config.getOrThrow<string>('HTTP_HOST')
+
+	app.setGlobalPrefix('/api')
 	app.use(cookieParser())
-	app.enableCors({
-		origin: ORIGIN,
-		credentials: true,
-		exposedHeaders: 'set-cookie'
-	})
+	app.enableCors(getCorsConfig(config))
 
 	const swagger = new DocumentBuilder()
 		.setTitle('CarbonAPI')
@@ -27,9 +28,14 @@ async function bootstrap() {
 	const documentFactory = () => SwaggerModule.createDocument(app, swagger)
 	SwaggerModule.setup('api/docs', app, documentFactory)
 
-	await app.listen(PORT).then(() => {
-		console.log('Server start on: http://localhost:' + PORT)
-	})
+	try {
+		await app.listen(port)
+
+		logger.log(`Server is running at: ${host}`)
+	} catch (error) {
+		logger.error(`Failed to start server: ${error.message}`, error)
+		process.exit(1)
+	}
 }
 
 bootstrap()

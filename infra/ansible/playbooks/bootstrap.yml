@@ -1,0 +1,8 @@
+- hosts: app
+  become: true
+  vars:
+    deploy_user: deploy
+  roles:
+    - role: common
+    - role: docker
+    - role: nginx
