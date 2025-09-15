@@ -4,10 +4,10 @@ import {
 	type NestModule
 } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+
+import { ApiModule } from './api/api.module'
 import { LoggingMiddleware } from './common/middleware/logger.middleware'
-import { DatabaseModule } from './database/database.module'
-import { UserModule } from './user/user.module'
-import { AuthModule } from './auth/auth.module';
+import { InfraModule } from './infra/infra.module'
 
 @Module({
 	imports: [
@@ -15,9 +15,8 @@ import { AuthModule } from './auth/auth.module';
 			isGlobal: true,
 			envFilePath: '.env'
 		}),
-		DatabaseModule,
-		UserModule,
-		AuthModule
+		InfraModule,
+		ApiModule
 	],
 	controllers: [],
 	providers: []

@@ -8,16 +8,18 @@ import { ConfigService } from '@nestjs/config'
 import { JwtService } from '@nestjs/jwt'
 import { hash, verify } from 'argon2'
 import type { Request, Response } from 'express'
+import { UserService } from 'src/api/user/user.service'
 import { isDev } from 'src/common/utils/is-dev'
-import { UserService } from 'src/user/user.service'
+import { ms, StringValue } from 'src/common/utils/ms.util'
+
 import { LoginRequestDto } from './dto/login.dto'
 import { RegisterRequestDto } from './dto/register.dto'
 import type { JwtPayload } from './interfaces/jwt.interface'
 
 @Injectable()
 export class AuthService {
-	private readonly JWT_ACCESS_TOKEN_TTL: string
-	private readonly JWT_REFRESH_TOKEN_TTL: string
+	private readonly JWT_ACCESS_TOKEN_TTL: StringValue
+	private readonly JWT_REFRESH_TOKEN_TTL: StringValue
 	private readonly COOKIE_DOMAIN: string
 
 	constructor(
@@ -25,10 +27,10 @@ export class AuthService {
 		private readonly jwtService: JwtService,
 		private readonly userService: UserService
 	) {
-		this.JWT_ACCESS_TOKEN_TTL = configService.getOrThrow<string>(
+		this.JWT_ACCESS_TOKEN_TTL = configService.getOrThrow<StringValue>(
 			'JWT_ACCESS_TOKEN_TTL'
 		)
-		this.JWT_REFRESH_TOKEN_TTL = configService.getOrThrow<string>(
+		this.JWT_REFRESH_TOKEN_TTL = configService.getOrThrow<StringValue>(
 			'JWT_REFRESH_TOKEN_TTL'
 		)
 		this.COOKIE_DOMAIN = configService.getOrThrow<string>('COOKIE_DOMAIN')
@@ -108,12 +110,9 @@ export class AuthService {
 	}
 
 	private auth(res: Response, id: string) {
-		const { accessToken, refreshToken } = this.generateTokens(id)
-		this.setCookie(
-			res,
-			refreshToken,
-			new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
-		)
+		const { accessToken, refreshToken, refreshTokenExpires } =
+			this.generateTokens(id)
+		this.setCookie(res, refreshToken, refreshTokenExpires)
 
 		return { accessToken }
 	}
@@ -125,13 +124,18 @@ export class AuthService {
 			expiresIn: this.JWT_ACCESS_TOKEN_TTL
 		})
 
+		const refreshTokenExpires = new Date(
+			Date.now() + ms(this.JWT_REFRESH_TOKEN_TTL)
+		)
+
 		const refreshToken = this.jwtService.sign(payload, {
 			expiresIn: this.JWT_REFRESH_TOKEN_TTL
 		})
 
 		return {
 			accessToken,
-			refreshToken
+			refreshToken,
+			refreshTokenExpires
 		}
 	}
 
