@@ -32,4 +32,16 @@ export class UserService {
 			where: { id }
 		})
 	}
+
+	async getBySpace(spaceId: string) {
+		return await this.prisma.user.findMany({
+			where: {
+				spaces: {
+					some: {
+						id: spaceId
+					}
+				}
+			}
+		})
+	}
 }
