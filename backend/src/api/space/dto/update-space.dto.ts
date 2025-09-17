@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { IsNotEmpty, IsOptional } from 'class-validator'
 
-export class CreateSpaceDto {
+export class UpdateSpaceDto {
 	@ApiProperty({
 		example: 'LGS',
 		description: 'Название пространства'
@@ -14,5 +14,5 @@ export class CreateSpaceDto {
 		description: 'Описание пространства'
 	})
 	@IsOptional()
-	description?: string
+	description: string
 }

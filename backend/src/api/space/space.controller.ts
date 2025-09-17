@@ -1,10 +1,12 @@
 import {
 	Body,
 	Controller,
+	Delete,
 	Get,
 	HttpCode,
 	HttpStatus,
 	Param,
+	Patch,
 	Post,
 	Put
 } from '@nestjs/common'
@@ -14,6 +16,7 @@ import { CurrentUser } from 'src/common/decorators/current-user.decorator'
 
 import { ConnectUserDto } from './dto/connect-user.dto'
 import { CreateSpaceDto } from './dto/create-space.dto'
+import { UpdateSpaceDto } from './dto/update-space.dto'
 import { SpaceService } from './space.service'
 
 @ApiTags('Spaces')
@@ -29,7 +32,7 @@ export class SpaceController {
 		@CurrentUser('id') userId: string,
 		@Body() dto: CreateSpaceDto
 	) {
-		return this.spaceService.create(dto, userId)
+		return await this.spaceService.create(dto, userId)
 	}
 
 	@Get('/get-by-id/:id')
@@ -37,18 +40,29 @@ export class SpaceController {
 	@HttpCode(HttpStatus.OK)
 	@ApiResponse({ status: HttpStatus.OK, description: 'Получить по ID' })
 	async getById(@Param(':id') id: string) {
-		return this.spaceService.getById(id)
+		return await this.spaceService.getById(id)
 	}
 
-	@Get()
+	@Get('/all')
 	@Auth()
 	@HttpCode(HttpStatus.OK)
 	@ApiResponse({
 		status: HttpStatus.OK,
-		description: 'Получить все пространства'
+		description: 'Получить все пространства, в которых есть пользователь'
 	})
 	async getAll(@CurrentUser('id') userId: string) {
-		return this.spaceService.getAll(userId)
+		return await this.spaceService.getAll(userId)
+	}
+
+	@Get('/users/:id')
+	@Auth()
+	@HttpCode(HttpStatus.OK)
+	@ApiResponse({
+		status: HttpStatus.OK,
+		description: 'Получить всех пользователей пространства'
+	})
+	async getUsersById(@Param('id') id: string) {
+		return await this.spaceService.getUsersById(id)
 	}
 
 	@Put('/connect/:id')
@@ -59,7 +73,8 @@ export class SpaceController {
 		description: 'Подключить пользователя в пространство'
 	})
 	async connect(@Body() dto: ConnectUserDto, @Param('id') id: string) {
-		return this.spaceService.connectUserToSpace(dto, id)
+		await this.spaceService.connectUserToSpace(dto, id)
+		return true
 	}
 
 	@Put('/disconnect/:id')
@@ -70,6 +85,30 @@ export class SpaceController {
 		description: 'Отключить пользователя из пространства'
 	})
 	async disconnect(@Body() dto: ConnectUserDto, @Param('id') id: string) {
-		return this.spaceService.disconnectUserInSpace(dto, id)
+		await this.spaceService.disconnectUserInSpace(dto, id)
+		return true
+	}
+
+	@Patch('/:id')
+	@Auth()
+	@HttpCode(HttpStatus.OK)
+	@ApiResponse({
+		status: HttpStatus.OK,
+		description: 'Изменить пространство'
+	})
+	async update(@Body() dto: UpdateSpaceDto, @Param('id') id: string) {
+		return await this.spaceService.update(dto, id)
+	}
+
+	@Delete('/:id')
+	@Auth()
+	@HttpCode(HttpStatus.OK)
+	@ApiResponse({
+		status: HttpStatus.OK,
+		description: 'Удалить пространство'
+	})
+	async delete(@Param('id') id: string, @CurrentUser('id') userId: string) {
+		await this.spaceService.delete(id, userId)
+		return true
 	}
 }

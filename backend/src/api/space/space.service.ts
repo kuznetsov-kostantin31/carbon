@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { PrismaService } from 'src/infra/database/prisma.service'
 
 import { UserService } from '../user/user.service'
 
 import { ConnectUserDto } from './dto/connect-user.dto'
 import { CreateSpaceDto } from './dto/create-space.dto'
+import { UpdateSpaceDto } from './dto/update-space.dto'
 
 @Injectable()
 export class SpaceService {
@@ -21,6 +22,11 @@ export class SpaceService {
 					connect: {
 						id: userId
 					}
+				},
+				editor: {
+					connect: {
+						id: userId
+					}
 				}
 			}
 		})
@@ -28,7 +34,19 @@ export class SpaceService {
 
 	async getById(id: string) {
 		return await this.prisma.space.findFirst({
-			where: { id }
+			where: { id },
+			include: {
+				users: true
+			}
+		})
+	}
+
+	async getUsersById(id: string) {
+		return await this.prisma.space.findUnique({
+			where: { id },
+			include: {
+				users: true
+			}
 		})
 	}
 
@@ -40,6 +58,9 @@ export class SpaceService {
 						id: userId
 					}
 				}
+			},
+			include: {
+				users: true
 			}
 		})
 	}
@@ -72,6 +93,44 @@ export class SpaceService {
 			},
 			include: {
 				users: true
+			}
+		})
+	}
+
+	async update(dto: Partial<UpdateSpaceDto>, id: string) {
+		return await this.prisma.space.update({
+			where: { id },
+			data: {
+				title: dto.title,
+				description: dto.description
+			}
+		})
+	}
+
+	async delete(id: string, userId: string) {
+		const editor = await this.prisma.space.findFirst({
+			where: {
+				id,
+				editor: {
+					some: {
+						id: userId
+					}
+				}
+			}
+		})
+
+		if (!editor) {
+			throw new UnauthorizedException('Вы не редактор пространства')
+		}
+
+		return await this.prisma.space.delete({
+			where: {
+				id,
+				editor: {
+					some: {
+						id: userId
+					}
+				}
 			}
 		})
 	}

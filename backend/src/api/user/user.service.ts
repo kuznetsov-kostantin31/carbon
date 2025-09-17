@@ -29,18 +29,9 @@ export class UserService {
 
 	async getById(id: string) {
 		return await this.prisma.user.findUnique({
-			where: { id }
-		})
-	}
-
-	async getBySpace(spaceId: string) {
-		return await this.prisma.user.findMany({
-			where: {
-				spaces: {
-					some: {
-						id: spaceId
-					}
-				}
+			where: { id },
+			include: {
+				spaces: true
 			}
 		})
 	}

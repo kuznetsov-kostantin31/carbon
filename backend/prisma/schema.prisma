@@ -15,7 +15,6 @@ datasource db {
 
 enum ROLE {
   USER
-  EDITOR
   ADMIN
 }
 
@@ -40,6 +39,7 @@ model User {
   spaces   Space[]   @relation("user_space")
   tasks    Task[]    @relation("user_task")
   projects Project[] @relation("user_project")
+  editable Space[]   @relation("editors")
 
   job          Job?        @relation(fields: [jobId], references: [id])
   jobId        String?     @map("job_id")
@@ -69,6 +69,8 @@ model Space {
 
   title       String
   description String?
+
+  editor User[] @relation("editors")
 
   users User[] @relation("user_space")
 
