@@ -6,7 +6,6 @@ import {
 import { ConfigModule } from '@nestjs/config'
 
 import { ApiModule } from './api/api.module'
-import { LoggingMiddleware } from './common/middleware/logger.middleware'
 import { InfraModule } from './infra/infra.module'
 
 @Module({
@@ -23,6 +22,11 @@ import { InfraModule } from './infra/infra.module'
 })
 export class AppModule implements NestModule {
 	configure(consumer: MiddlewareConsumer) {
-		consumer.apply(LoggingMiddleware).forRoutes('*')
+		consumer
+			.apply((req, res, next) => {
+				console.log(`Request: ${req.method} ${req.url}`)
+				next()
+			})
+			.forRoutes('*')
 	}
 }

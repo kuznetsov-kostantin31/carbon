@@ -60,11 +60,19 @@ export class SpaceService {
 		})
 	}
 
-	async deleteUserInSpace(dto: ConnectUserDto, id: string) {
-		// return this.prisma.space.({
-		// 	where: {id},
-		// 	data: {
-		// 	}
-		// })
+	async disconnectUserInSpace(dto: ConnectUserDto, id: string) {
+		return await this.prisma.space.update({
+			where: { id },
+			data: {
+				users: {
+					disconnect: {
+						email: dto.email
+					}
+				}
+			},
+			include: {
+				users: true
+			}
+		})
 	}
 }

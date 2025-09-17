@@ -1,4 +1,4 @@
-import { Logger, ValidationPipe } from '@nestjs/common'
+import { Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -18,7 +18,6 @@ async function bootstrap() {
 	app.setGlobalPrefix('/api')
 	app.use(cookieParser(config.getOrThrow<string>('COOKIE_SECRET')))
 	app.enableCors(getCorsConfig(config))
-	app.useGlobalPipes(new ValidationPipe())
 
 	const swagger = new DocumentBuilder()
 		.setTitle('CarbonAPI')

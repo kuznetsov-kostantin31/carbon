@@ -1,7 +1,6 @@
 import {
 	Body,
 	Controller,
-	Get,
 	HttpCode,
 	HttpStatus,
 	Post,
@@ -10,13 +9,12 @@ import {
 } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import type { Request, Response } from 'express'
-import { Auth } from 'src/common/decorators/auth.decorator'
-import { CurrentUser } from 'src/common/decorators/current-user.decorator'
+
 import { AuthService } from './auth.service'
 import { LoginRequestDto } from './dto/login.dto'
 import { RegisterRequestDto } from './dto/register.dto'
 
-@ApiTags('auth')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
 	constructor(private readonly authService: AuthService) {}
@@ -56,13 +54,5 @@ export class AuthController {
 	@ApiResponse({ status: HttpStatus.OK, description: 'Выход из аккаунта' })
 	async logout(@Res({ passthrough: true }) res: Response) {
 		return await this.authService.logout(res)
-	}
-
-	@Get('@me')
-	@Auth()
-	@HttpCode(HttpStatus.OK)
-	@ApiResponse({ status: HttpStatus.OK, description: 'Профиль' })
-	async me(@CurrentUser('id') id: string) {
-		return { id }
 	}
 }

@@ -8,7 +8,7 @@ import {
 	Post,
 	Put
 } from '@nestjs/common'
-import { ApiResponse } from '@nestjs/swagger'
+import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { Auth } from 'src/common/decorators/auth.decorator'
 import { CurrentUser } from 'src/common/decorators/current-user.decorator'
 
@@ -16,6 +16,7 @@ import { ConnectUserDto } from './dto/connect-user.dto'
 import { CreateSpaceDto } from './dto/create-space.dto'
 import { SpaceService } from './space.service'
 
+@ApiTags('Spaces')
 @Controller('space')
 export class SpaceController {
 	constructor(private readonly spaceService: SpaceService) {}
@@ -55,9 +56,20 @@ export class SpaceController {
 	@HttpCode(HttpStatus.OK)
 	@ApiResponse({
 		status: HttpStatus.OK,
-		description: 'Получить все пространства'
+		description: 'Подключить пользователя в пространство'
 	})
 	async connect(@Body() dto: ConnectUserDto, @Param('id') id: string) {
 		return this.spaceService.connectUserToSpace(dto, id)
+	}
+
+	@Put('/disconnect/:id')
+	@Auth()
+	@HttpCode(HttpStatus.OK)
+	@ApiResponse({
+		status: HttpStatus.OK,
+		description: 'Отключить пользователя из пространства'
+	})
+	async disconnect(@Body() dto: ConnectUserDto, @Param('id') id: string) {
+		return this.spaceService.disconnectUserInSpace(dto, id)
 	}
 }
